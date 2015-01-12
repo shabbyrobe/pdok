@@ -396,6 +396,6 @@ class Connector
         if (!$this->pdo) {
             return false;
         }
-        return $this->pdo->inTransaction;
+        return $this->pdo->inTransaction();
     }
 }
