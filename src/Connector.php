@@ -390,4 +390,12 @@ class Connector
         }
 		return $quote.str_replace($quote, '', $name).$quote;
 	}
+
+    public function inTransaction()
+    {
+        if (!$this->pdo) {
+            return false;
+        }
+        return $this->pdo->inTransaction;
+    }
 }
