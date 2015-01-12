@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- don't set strict to either true or false - it takes precedence
+	 over all the other settings -->
+<phpunit backupGlobals="false"
+         bootstrap="test/config.php"
+         backupStaticAttributes="false"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+		 checkForUnintentionallyCoveredCode="false"
+		 beStrictAboutTestsThatDoNotTestAnything="true"
+		 beStrictAboutOutputDuringTests="true"
+		 beStrictAboutTestSize="true"
+         verbose="true">
+    
+    <testsuite name="Test">
+        <directory suffix="Test.php">test/lib</directory>
+    </testsuite>
+
+    <groups>
+	  <exclude>
+	    <group>flaky</group>
+	  </exclude>
+	</groups>
+
+</phpunit>
+
