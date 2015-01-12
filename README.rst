@@ -30,6 +30,16 @@ Connect on demand:
     $pdo = new \PDOK\Connector('...')
     assert($pdo->isConnected() == false);
 
+    $pdo->query("SELECT * FROM mytable");
+    assert($pdo->isConnected() == true);
+
+
+Or you can force the connection yourself:
+
+.. code-block:: php
+
+    <?php
+    $pdo = new \PDOK\Connector('...');
     $pdo->connect();
     assert($pdo->isConnected() == true);
 
