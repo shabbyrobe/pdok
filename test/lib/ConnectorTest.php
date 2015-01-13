@@ -3,15 +3,8 @@ namespace PDOK\Test;
 
 use PDOK\Connector;
 
-/**
- * This test doesn't make any real connections, so it should not be necessary to
- * extend from DataTestCase
- * @group unit
- */
 class ConnectorTest extends \CustomTestCase
 {
-    /**
-     */
     public function testEngine()
     {
         $c = new Connector('pants:foo=bar');
@@ -19,6 +12,7 @@ class ConnectorTest extends \CustomTestCase
     }
     
     /**
+     * @covers PDOK\Connector::connect
      */
     public function testConnect()
     {
@@ -38,70 +32,6 @@ class ConnectorTest extends \CustomTestCase
         $this->assertNotNull($this->getProtected($c, 'pdo'));
         $c->disconnect();
         $this->assertNull($this->getProtected($c, 'pdo'));
-    }
-    
-    /**
-     * @covers PDOK\Connector::setAttribute
-     */
-    public function testDisconnectedSetAttribute()
-    {
-        $c = new Connector('sqlite::memory:');
-        $this->assertNull($this->getProtected($c, 'pdo'));
-        
-        $c->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-        $this->assertNull($this->getProtected($c, 'pdo'));
-        $this->assertEquals(array(\PDO::ATTR_DEFAULT_FETCH_MODE=>\PDO::FETCH_ASSOC), $this->getProtected($c, 'attributes'));
-    }
-
-    /**
-     * @covers PDOK\Connector::setAttribute
-     */
-    public function testConnectedSetAttribute()
-    {
-        $pdo = $this->getMockBuilder('stdClass')
-            ->setMethods(array('setAttribute'))
-            ->getMock()
-        ;
-        $pdo->expects($this->once())->method('setAttribute')->with(
-            $this->equalTo(\PDO::ATTR_ERRMODE),
-            $this->equalTo(\PDO::ERRMODE_EXCEPTION)
-        );
-        $c = new Connector('sqlite::memory:');
-        $this->setProtected($c, 'pdo', $pdo);
-        $c->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-    }
-    
-    /**
-     * @covers PDOK\Connector::getAttribute
-     */
-    public function testDisconnectedGetAttribute()
-    {
-        $c = new Connector('sqlite::memory:');
-        $this->setProtected($c, 'attributes', array(\PDO::ATTR_DEFAULT_FETCH_MODE=>\PDO::FETCH_ASSOC));
-        $this->assertNull($this->getProtected($c, 'pdo'));
-        
-        $attr = $c->getAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE);
-        $this->assertNull($this->getProtected($c, 'pdo'));
-        $this->assertEquals($attr, \PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * @covers PDOK\Connector::getAttribute
-     */
-    public function testConnectedGetAttribute()
-    {
-        $pdo = $this->getMockBuilder('stdClass')
-            ->setMethods(array('getAttribute'))
-            ->getMock()
-        ;
-        $pdo->expects($this->once())->method('getAttribute')
-            ->with($this->equalTo(\PDO::ATTR_ERRMODE))
-            ->will($this->returnValue(\PDO::ERRMODE_EXCEPTION))
-        ;
-        
-        $c = new Connector('sqlite::memory:');
-        $this->setProtected($c, 'pdo', $pdo);
-        $this->assertEquals(\PDO::ERRMODE_EXCEPTION, $c->getAttribute(\PDO::ATTR_ERRMODE));
     }
 
     /**
@@ -170,12 +100,11 @@ class ConnectorTest extends \CustomTestCase
         $connector = $this->getMockBuilder('PDOK\Connector')
             ->setMethods(array('createPDO'))
             ->disableOriginalConstructor()
-            ->getMock()
-        ;
+            ->getMock();
         $pdo = $this->getMockBuilder('stdClass')
             ->setMethods(array($method))
-            ->getMock()
-        ;
+            ->getMock();
+
         $connector->expects($this->any())->method('createPDO')->will($this->returnValue($pdo));
         $expect = $pdo->expects($this->once())->method($method);
         $connector->connect();
@@ -185,8 +114,9 @@ class ConnectorTest extends \CustomTestCase
             foreach ($args as $a) {
                 $equals[] = $this->equalTo($a);
             }
-            call_user_func_array(array($expect, 'with'), $equals);
+            $expect = call_user_func_array(array($expect, 'with'), $equals);
         }
+        $expect->will($this->returnValue(true));
         
         call_user_func_array(array($connector, $method), $args);
     }
@@ -210,124 +140,79 @@ class ConnectorTest extends \CustomTestCase
     }
 
     /**
-     * @covers PDOK\Connector::create
-     * @dataProvider dataForCreateHost
+     * @covers PDOK\Connector::connect
+     * @covers PDOK\Connector::exec
+     * @covers PDOK\Connector::prepare
+     * @covers PDOK\Connector::query
+     * @covers PDOK\Connector::quote
+     * @covers PDOK\Connector::beginTransaction
+     * @covers PDOK\Connector::commit
+     * @covers PDOK\Connector::rollback
+     * @dataProvider dataForAutoConnect
      */
-    public function testCreateHost($hostKey)
+    public function testAutoConnect($method, $args=[])
     {
-        $conn = \PDOK\Connector::create(array($hostKey=>'dbhost'));
-        $this->assertEquals('mysql:host=dbhost;', $conn->dsn);
+        $connector = $this->getMockBuilder('PDOK\Connector')
+            ->setMethods(array('createPDO'))
+            ->disableOriginalConstructor()
+            ->getMock();
+        $pdo = $this->getMockBuilder('stdClass')
+            ->setMethods(array($method))
+            ->getMock();
+
+        $connector->expects($this->once())->method('createPDO')->will($this->returnValue($pdo));
+        $expect = $pdo->expects($this->once())->method($method)->will($this->returnValue(true));
+
+        $this->assertFalse($connector->isConnected());
+        call_user_func_array(array($connector, $method), $args);
+        $this->assertTrue($connector->isConnected());
     }
-    
-    public function dataForCreateHost()
+
+    public function dataForAutoConnect()
     {
         return array(
-            array('host'),
-            array('HOst'),
-            array('hostName'),
-            array('hOSTAGe'),
-            array('hOSTAGe'),
-            array('host_name'),
-            array('server'),
+            array('exec', array('yep')),
+            array('prepare', array('stmt', array('k'=>'v'))),
+            array('quote', array('q')),
+            array('beginTransaction'),
+            array('commit'),
+            array('rollback'),
+            array('query'),
         );
     }
 
     /**
-     * @covers PDOK\Connector::create
-     * @dataProvider dataForCreateUser
+     * @covers PDOK\Connector::__clone
      */
-    public function testCreateUser($key)
+    public function testClone()
     {
-        $conn = \PDOK\Connector::create(array($key=>'myuser'));
-        $this->assertEquals('myuser', $conn->username);
-    }
-    
-    public function dataForCreateUser()
-    {
-        return array(
-            array('u'),
-            array('UNAME'),
-            array('unagi'),
-            array('user'),
-        );
+        $conn = new \PDOK\Connector('sqlite::memory:');
+        $conn->connect();
+        $this->assertTrue($conn->isConnected());
+
+        $conn2 = clone $conn;
+        $this->assertTrue($conn->isConnected());
+        $this->assertFalse($conn2->isConnected());
+
+        $conn2->connect();
+        $this->assertNotSame($conn->pdo, $conn2->pdo);
     }
 
     /**
-     * @covers PDOK\Connector::create
-     * @dataProvider dataForCreatePassword
+     * @covers PDOK\Connector::__sleep
      */
-    public function testCreatePassword($key)
+    public function testSerialize()
     {
-        $conn = \PDOK\Connector::create(array($key=>'passw0rd'));
-        $this->assertEquals('passw0rd', $conn->password);
-    }
-    
-    public function dataForCreatePassword()
-    {
-        return array(
-            array('p'),
-            array('Pass'),
-            array('paSSword'),
-            array('passwd'),
-            array('plage noire'),
-        );
-    }
+        $conn = new \PDOK\Connector('sqlite::memory:');
+        $conn->connect();
+        $this->assertTrue($conn->isConnected());
 
-    /**
-     * @covers PDOK\Connector::create
-     * @dataProvider dataForCreateOptions
-     */
-    public function testCreateOptions($key)
-    {
-        $conn = \PDOK\Connector::create(array($key=>[\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY=>true]));
-        $this->assertEquals([\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY=>true], $conn->driverOptions);
-    }
-    
-    public function dataForCreateOptions()
-    {
-        return array(
-            array('driverOptions'),
-            array('driveroptions'),
-            array('options'),
-        );
-    }
-
-    /**
-     * @covers PDOK\Connector::create
-     * @dataProvider dataForCreateConnectionStatements
-     */
-    public function testCreateConnectionStatements($key)
-    {
-        $conn = \PDOK\Connector::create(array($key=>array('a', 'b')));
-        $this->assertEquals(array('a', 'b'), $conn->connectionStatements);
-    }
-    
-    public function dataForCreateConnectionStatements()
-    {
-        return array(
-            array('connectionstatements'),
-            array('CONNECTIONstatements'),
-            array('statements'),
-        );
-    }
-
-    /**
-     * @covers PDOK\Connector::create
-     */
-    public function testCreateDsn()
-    {
-        $value = 'mysql:host=localhost;dbname=foobar';
-        $conn = \PDOK\Connector::create(array('dsn'=>$value));
-        $this->assertEquals($value, $conn->dsn);
-    }
-
-    /**
-     * @covers PDOK\Connector::create
-     */
-    public function testCreateDsnOverridesHost()
-    {
-        $value = 'mysql:host=localhost;dbname=foobar';
-        $conn = \PDOK\Connector::create(array('dsn'=>$value, 'host'=>'whoopee'));
-        $this->assertEquals($value, $conn->dsn);
+        $conn2 = unserialize(serialize($conn));
+        $this->assertFalse($conn2->isConnected());
+        $props = ['dsn', 'engine', 'username', 'password', 'driverOptions', 'connectionStatements'];
+        foreach ($props as $prop) {
+            $this->assertEquals($conn->$prop, $conn2->$prop);
+        }
+        $this->assertEquals($this->getProtected($conn, 'useWrapper'), $this->getProtected($conn, 'useWrapper'));
     }
 }

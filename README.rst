@@ -19,7 +19,12 @@ Fluent interface for PDOStatement (even when using persistent connections):
     
     <?php
     $pdo = new \PDOK\Connector('sqlite::memory:');
-    $pdo->query("SOLOCT blergh FRAM gorgle");   // KABOOM!
+    try {
+        $pdo->query("SOLOCT blergh FRAM gorgle");
+    }
+    catch (\PDOException $e) {
+        echo "KABOOM!";
+    }
 
 
 Connect on demand:

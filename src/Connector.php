@@ -65,10 +65,24 @@ class Connector
     private $attributes=array();
 
     private $useWrapper = false;
+
+    private $attributeIndex = [
+        \PDO::ATTR_CASE => 'PDO::ATTR_CASE',
+        \PDO::ATTR_ERRMODE => 'PDO::ATTR_ERRMODE',
+        \PDO::ATTR_ORACLE_NULLS => 'PDO::ATTR_ORACLE_NULLS',
+        \PDO::ATTR_STRINGIFY_FETCHES => 'PDO::ATTR_STRINGIFY_FETCHES',
+        \PDO::ATTR_STATEMENT_CLASS => 'PDO::ATTR_STATEMENT_CLASS',
+        \PDO::ATTR_TIMEOUT => 'PDO::ATTR_TIMEOUT',
+        \PDO::ATTR_AUTOCOMMIT => 'PDO::ATTR_AUTOCOMMIT',
+        \PDO::ATTR_EMULATE_PREPARES => 'PDO::ATTR_EMULATE_PREPARES',
+        \PDO::ATTR_DEFAULT_FETCH_MODE => 'PDO::ATTR_DEFAULT_FETCH_MODE',
+        \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 'PDO::MYSQL_ATTR_USE_BUFFERED_QUERY',
+    ];
     
     public function __clone()
     {
         $this->pdo = null;
+        $this->queries = 0;
     }
     
     public function __construct($dsn, $username=null, $password=null, array $driverOptions=null, array $connectionStatements=null)
@@ -92,11 +106,12 @@ class Connector
     public function __sleep()
     {
         $this->pdo = null;
+        $this->queries = 0;
         $keys = array_keys(get_object_vars($this));
         $keys[] = 'attributes';
         return $keys;
     }
-    
+
     /**
      * Creates a Connector from an array of connection parameters.
      * @param array Parameters to use to create the connection
@@ -110,11 +125,11 @@ class Connector
             $k = strtolower($k);
             if (strpos($k, "host")===0 || $k == 'server' || $k == 'sys') {
                 $host = $v;
-            } elseif ($k=='port') {
+            } elseif ($k[0] == 'p' && $k[1] == 'o') {
                 $port = $v;
             } elseif ($k=="database" || $k == 'db' || strpos($k, "db")===0) {
                 $database = $v;
-            } elseif ($k[0] == 'p') {
+            } elseif (($k[0] == 'p' && $k[1] == 'a')) {
                 $password = $v;
             } elseif ($k[0] == 'u') {
                 $user = $v;
@@ -176,11 +191,9 @@ class Connector
         
         if ($this->attributes) {
             foreach ($this->attributes as $k=>$v) {
-                $pdo->setAttribute($k, $v);
+                $this->setPDOAttribute($pdo, $k, $v);
             }
         }
-        $this->attributes = null;
-        
         foreach ($this->connectionStatements as $sql) {
             $pdo->exec($sql);
         }
@@ -190,7 +203,7 @@ class Connector
     
     public function isConnected()
     {
-        return $this->pdo;
+        return $this->pdo == true;
     }
     
     public function ensurePDO()
@@ -198,11 +211,13 @@ class Connector
         if ($this->pdo == null) {
             throw new \PDOException("Not connected");
         }
+        return $this;
     }
 
     public function connect()
     {
         $this->getPDO();
+        return $this;
     }
     
     /**
@@ -224,16 +239,31 @@ class Connector
     public function disconnect()
     {
         $this->pdo = null;
+        return $this;
     }
     
+    private function setPDOAttribute($pdo, $attribute, $value)
+    {
+        if (!is_long($attribute)) {
+            throw new \InvalidArgumentException("PDOK\Connector::setAttribute() expects parameter 1 to be long, ".gettype($attribute)." given");
+        }
+        if ($attribute == \PDO::ATTR_ERRMODE) {
+            throw new \InvalidArgumentException("Cannot set PDO::ATTR_ERRMODE: PDOK requires it be set to ERRMODE_EXCEPTION");
+        }
+        $result = $pdo->setAttribute($attribute, $value);
+        if ($result !== true) {
+            $name = &$this->attributeIndex[$attribute] ?: "(unknown:$attribute)";
+            throw new \PDOException("Attribute $name, value $value invalid for engine {$this->engine}");
+        }
+    }
+
     public function setAttribute($attribute, $value)
     {
-        if ($this->pdo == null) {
-            $this->attributes[$attribute] = $value;
-            return true;
+        $this->attributes[$attribute] = $value;
+        if ($this->pdo != null) {
+            $this->setPDOAttribute($this->pdo, $attribute, $value);
         }
-        else
-            return $this->pdo->setAttribute($attribute, $value);
+        return $this;
     }
     
     public function getAttribute($attribute)
@@ -241,7 +271,9 @@ class Connector
         if ($this->pdo == null) {
             return isset($this->attributes[$attribute]) ? $this->attributes[$attribute] : null;
         } else {
-            return $this->pdo->getAttribute($attribute);
+            $value = $this->pdo->getAttribute($attribute);
+            $this->attributes[$attribute] = $value;
+            return $value;
         }
     }
     
@@ -253,7 +285,10 @@ class Connector
         if (!$this->pdo) {
             $this->connect();
         }
-        return $this->pdo->beginTransaction();
+        if (!$this->pdo->beginTransaction()) {
+            throw new \PDOException("PDOK: beginTransaction() failed");
+        }
+        return $this;
     }
     
     /**
@@ -264,7 +299,10 @@ class Connector
         if (!$this->pdo) {
             $this->connect();
         }
-        return $this->pdo->commit();
+        if (!$this->pdo->commit()) {
+            throw new \PDOException("PDOK: commit() failed");
+        }
+        return $this;
     }
     
     public function rollBack()
@@ -272,7 +310,10 @@ class Connector
         if (!$this->pdo) {
             $this->connect();
         }
-        return $this->pdo->rollBack();
+        if (!$this->pdo->rollBack()) {
+            throw new \PDOException("PDOK: rollBack() failed");
+        }
+        return $this;
     }
     
     public function errorCode()

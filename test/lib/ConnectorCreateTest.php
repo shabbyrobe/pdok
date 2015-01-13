@@ -73,50 +73,127 @@ class ConnectorCreateTest extends \CustomTestCase
     
     /**
      * @covers PDOK\Connector::create
-     * @dataProvider userNameKeysProvider
+     * @dataProvider dataForCreateUser
      */
-    function testCreateFromArrayUserName($key)
+    public function testCreateUser($key)
     {
-        $c = Connector::create(array(
-            'host'=>'localhost',
-            $key=>'abc',
-        ));
-        $this->assertEquals('abc', $c->username);
+        $conn = \PDOK\Connector::create(array($key=>'myuser'));
+        $this->assertEquals('myuser', $conn->username);
     }
     
-    function userNameKeysProvider()
+    public function dataForCreateUser()
     {
         return array(
             array('u'),
-            array('uname'),
+            array('UNAME'),
+            array('unagi'),
             array('user'),
+            array('uname'),
             array('username'),
             array('userName'),
         );
     }
-    
+
     /**
      * @covers PDOK\Connector::create
-     * @dataProvider passwordKeysProvider
+     * @dataProvider dataForCreatePassword
      */
-    function testCreateFromArrayPassword($key)
+    public function testCreatePassword($key)
     {
-        $c = Connector::create(array(
-            'host'=>'localhost',
-            $key=>'abc',
-        ));
-        $this->assertEquals('abc', $c->password);
+        $conn = \PDOK\Connector::create(array($key=>'passw0rd'));
+        $this->assertEquals('passw0rd', $conn->password);
     }
     
-    function passwordKeysProvider()
+    public function dataForCreatePassword()
     {
         return array(
-            array('p'),
-            array('P'),
-            array('pass'),
+            array('pa'),
+            array('Pass'),
+            array('paSSword'),
+            array('passwd'),
             array('PASSWD'),
-            array('password'),
-            array('PAssWOrd'),
         );
     }
+
+    /**
+     * @covers PDOK\Connector::create
+     * @dataProvider dataForCreateHost
+     */
+    public function testCreateHost($hostKey)
+    {
+        $conn = \PDOK\Connector::create(array($hostKey=>'dbhost'));
+        $this->assertEquals('mysql:host=dbhost;', $conn->dsn);
+    }
+    
+    public function dataForCreateHost()
+    {
+        return array(
+            array('host'),
+            array('HOst'),
+            array('hostName'),
+            array('hOSTAGe'),
+            array('hOSTAGe'),
+            array('host_name'),
+            array('server'),
+        );
+    }
+
+    /**
+     * @covers PDOK\Connector::create
+     * @dataProvider dataForCreateOptions
+     */
+    public function testCreateOptions($key)
+    {
+        $conn = \PDOK\Connector::create(array($key=>[\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY=>true]));
+        $this->assertEquals([\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY=>true], $conn->driverOptions);
+    }
+    
+    public function dataForCreateOptions()
+    {
+        return array(
+            array('driverOptions'),
+            array('driveroptions'),
+            array('options'),
+        );
+    }
+
+    /**
+     * @covers PDOK\Connector::create
+     * @dataProvider dataForCreateConnectionStatements
+     */
+    public function testCreateConnectionStatements($key)
+    {
+        $conn = \PDOK\Connector::create(array($key=>array('a', 'b')));
+        $this->assertEquals(array('a', 'b'), $conn->connectionStatements);
+    }
+    
+    public function dataForCreateConnectionStatements()
+    {
+        return array(
+            array('connectionstatements'),
+            array('CONNECTIONstatements'),
+            array('statements'),
+        );
+    }
+
+    /**
+     * @covers PDOK\Connector::create
+     */
+    public function testCreateDsn()
+    {
+        $value = 'mysql:host=localhost;dbname=foobar';
+        $conn = \PDOK\Connector::create(array('dsn'=>$value));
+        $this->assertEquals($value, $conn->dsn);
+    }
+
+    /**
+     * @covers PDOK\Connector::create
+     */
+    public function testCreateDsnOverridesHost()
+    {
+        $value = 'mysql:host=localhost;dbname=foobar';
+        $conn = \PDOK\Connector::create(array('dsn'=>$value, 'host'=>'whoopee'));
+        $this->assertEquals($value, $conn->dsn);
+    }
+
 }
