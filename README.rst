@@ -13,6 +13,17 @@ Fluent interface for PDOStatement (even when using persistent connections):
     $pdo->prepare('SELECT * FROM mytable WHERE mycol=?')->execute(['yep'])->fetchAll();
 
 
+Fluent interface for PDO:
+
+.. code-block:: php
+    
+    <?php
+    $pdo->beginTransaction()
+        ->execute('INSERT INTO foo VALUES(1, "yep");')
+        ->execute('INSERT INTO foo VALUES(2, "yay");')
+        ->commit();
+
+
 ``PDO::ERRMODE_EXCEPTION`` is always used:
 
 .. code-block:: php
