@@ -17,7 +17,7 @@ class Statement extends \PDOStatement
 
 	function bindParam($parameter, &$variable, $type=\PDO::PARAM_STR, $length=null, $driverOptions=null) 
 	{
-        return ($ret = parent::bindParam($variable, $param, $type, $length, $driverOptions)) ? $this : $ret;
+        return ($ret = parent::bindParam($parameter, $variable, $type, $length, $driverOptions)) ? $this : $ret;
 	}
 
 	function bindValue($parameter, $value, $type=\PDO::PARAM_STR) 
@@ -60,6 +60,8 @@ class Statement extends \PDOStatement
 
 	function setFetchMode($mode, $params=null) 
 	{
-        return ($ret = parent::setFetchMode($mode, $params)) ? $this : $ret;
+        // setFetchMode is sensitive to the number of parameters it receives
+        $ret = call_user_func_array(array('parent', 'setFetchMode'), func_get_args());
+        return $ret ? $this : $ret;
 	}
 }

@@ -93,6 +93,7 @@ class ConnectorTest extends \CustomTestCase
      * @covers PDOK\Connector::beginTransaction
      * @covers PDOK\Connector::commit
      * @covers PDOK\Connector::rollback
+     * @covers PDOK\Connector::inTransaction
      * @dataProvider dataForProxies
      */
     public function testProxies($method, $args=array())
@@ -131,6 +132,7 @@ class ConnectorTest extends \CustomTestCase
             array('beginTransaction'),
             array('commit'),
             array('rollback'),
+            array('inTransaction'),
             
             // query just takes whatever you throw at it
             array('query'),
@@ -150,7 +152,7 @@ class ConnectorTest extends \CustomTestCase
      * @covers PDOK\Connector::rollback
      * @dataProvider dataForAutoConnect
      */
-    public function testAutoConnect($method, $args=[])
+    public function testAutoConnect($method, $args=array())
     {
         $connector = $this->getMockBuilder('PDOK\Connector')
             ->setMethods(array('createPDO'))
@@ -209,10 +211,84 @@ class ConnectorTest extends \CustomTestCase
 
         $conn2 = unserialize(serialize($conn));
         $this->assertFalse($conn2->isConnected());
-        $props = ['dsn', 'engine', 'username', 'password', 'driverOptions', 'connectionStatements'];
+        $props = array('dsn', 'engine', 'username', 'password', 'driverOptions', 'connectionStatements');
         foreach ($props as $prop) {
             $this->assertEquals($conn->$prop, $conn2->$prop);
         }
         $this->assertEquals($this->getProtected($conn, 'useWrapper'), $this->getProtected($conn, 'useWrapper'));
+    }
+
+    /**
+     * @covers PDOK\Connector::createPDO
+     */
+    public function testCreatePDOConnectionStatements()
+    {
+        $conn = \PDOK\Connector::create(array('dsn'=>'sqlite::memory:', 'connectionStatements'=>array(
+            'CREATE TABLE foo(id INT);',
+            'INSERT INTO foo VALUES(1);',
+            'INSERT INTO foo VALUES(2);',
+        )));
+        $rows = $conn->query("SELECT * FROM foo")->fetchAll(\PDO::FETCH_COLUMN, 0);
+        $this->assertEquals(array(1, 2), $rows);
+    }
+
+    /**
+     * @covers PDOK\Connector::exec
+     * @covers PDOK\Connector::execute
+     */
+    public function testExecuteWithParams()
+    {
+        $conn = new \PDOK\Connector('sqlite::memory:');
+        $conn->execute("CREATE TABLE foo(id INT, val STRING);");
+        $conn->execute("INSERT INTO foo(id, val) VALUES(:id, :val)", array(':id'=>3, ':val'=>'yep'));
+        $rows = $conn->query("SELECT * FROM foo")->fetchAll(\PDO::FETCH_ASSOC);
+        $this->assertEquals(array(array('id'=>3, 'val'=>'yep')), $rows);
+    }
+
+    /**
+     * @covers PDOK\Connector::execAll
+     * @covers PDOK\Connector::executeAll
+     */
+    public function testExecuteAll()
+    {
+        $conn = new \PDOK\Connector('sqlite::memory:');
+        $conn->executeAll(array(
+            "CREATE TABLE foo(id INT, val STRING);",
+            "INSERT INTO foo(id, val) VALUES(3, 'yep');",
+        ));
+        $rows = $conn->query("SELECT * FROM foo")->fetchAll(\PDO::FETCH_ASSOC);
+        $this->assertEquals(array(array('id'=>3, 'val'=>'yep')), $rows);
+    }
+
+    /**
+     * @covers PDOK\Connector::quoteIdentifier
+     * @dataProvider dataForQuoteIdentifier
+     */
+    public function testQuoteIdentifier($engine, $value, $quoted)
+    {
+        $conn = new \PDOK\Connector('sqlite::memory:');
+        $conn->engine = $engine;
+        $result = $conn->quoteIdentifier($value);
+        $this->assertEquals($quoted, $result);
+    }
+
+    /**
+     * @covers PDOK\Connector::inTransaction
+     */
+    public function testInTransactionReturnsFalseWhenDisconnected()
+    {
+        $conn = new \PDOK\Connector('sqlite::memory:');
+        $this->assertFalse($conn->inTransaction());
+    }
+
+    public function dataForQuoteIdentifier()
+    {
+        return array(
+            array('sqlite', 'foo bar', '`foo bar`'),
+            array('mysql', 'foo bar', '`foo bar`'),
+            array('pgsql', 'foo bar', '"foo bar"'),
+            array('oci', 'foo bar', '"foo bar"'),
+            array('mssql', 'foo bar', '[foo bar]'),
+        );
     }
 }

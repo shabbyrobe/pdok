@@ -144,8 +144,8 @@ class ConnectorCreateTest extends \CustomTestCase
      */
     public function testCreateOptions($key)
     {
-        $conn = \PDOK\Connector::create(array($key=>[\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY=>true]));
-        $this->assertEquals([\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY=>true], $conn->driverOptions);
+        $conn = \PDOK\Connector::create(array($key=>array(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY=>true)));
+        $this->assertEquals(array(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY=>true), $conn->driverOptions);
     }
     
     public function dataForCreateOptions()

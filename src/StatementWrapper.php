@@ -49,7 +49,7 @@ class StatementWrapper
 
 	function columnCount() 
 	{
-        return $this->statement->closeCursor();
+        return $this->statement->columnCount();
 	}
 
 	function debugDumpParams() 
@@ -67,16 +67,15 @@ class StatementWrapper
         return $this->statement->errorInfo();
 	}
 
-	function execute($inputParameters=[]) 
+	function execute($inputParameters=null) 
 	{
         ++$this->connector->queries;
         return ($ret = $this->statement->execute($inputParameters)) ? $this : $ret;
 	}
 
-	function exec($inputParameters=[]) 
+	function exec($inputParameters=null) 
 	{
-        ++$this->connector->queries;
-        return ($ret = $this->statement->execute($inputParameters)) ? $this : $ret;
+        return $this->execute($inputParameters);
 	}
 
 	function fetch($fetchStyle=null, $cursorOrientation=\PDO::FETCH_ORI_NEXT, $cursorOffset=0) 
@@ -86,7 +85,9 @@ class StatementWrapper
 
 	function fetchAll($fetchStyle=null, $fetchArgument=null, array $ctorArgs=array()) 
 	{
-        return $this->statement->fetchAll($fetchStyle, $fetchArgument, $ctorArgs);
+        // PDOStatement is sensitive to the number of arguments passed. If you try to do
+        // a straight proxy, you get "General error: Extraneous additional parameters"
+        return call_user_func_array(array($this->statement, 'fetchAll'), func_get_args());
 	}
 
 	function fetchColumn($columnNumber=0) 
@@ -124,8 +125,10 @@ class StatementWrapper
         return ($ret = $this->statement->setAttribute($attribute, $value)) ? $this : $ret;
 	}
 
-	function setFetchMode($mode) 
+	function setFetchMode($mode, $params=null) 
 	{
-        return ($ret = $this->statement->setFetchMode($mode));
+        // setFetchMode is sensitive to the number of parameters it receives
+        $ret = call_user_func_array(array($this->statement, 'setFetchMode'), func_get_args());
+        return $ret ? $this : $ret;
 	}
 }

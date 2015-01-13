@@ -66,7 +66,7 @@ class Connector
 
     private $useWrapper = false;
 
-    private $attributeIndex = [
+    private static $attributeIndex = array(
         \PDO::ATTR_CASE => 'PDO::ATTR_CASE',
         \PDO::ATTR_ERRMODE => 'PDO::ATTR_ERRMODE',
         \PDO::ATTR_ORACLE_NULLS => 'PDO::ATTR_ORACLE_NULLS',
@@ -77,7 +77,7 @@ class Connector
         \PDO::ATTR_EMULATE_PREPARES => 'PDO::ATTR_EMULATE_PREPARES',
         \PDO::ATTR_DEFAULT_FETCH_MODE => 'PDO::ATTR_DEFAULT_FETCH_MODE',
         \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => 'PDO::MYSQL_ATTR_USE_BUFFERED_QUERY',
-    ];
+    );
     
     public function __clone()
     {
@@ -153,7 +153,7 @@ class Connector
             $dsn = $params['dsn'];
         }
         if ($options) {
-            $nOptions = [];
+            $nOptions = array();
             foreach ($options as $k=>$v) {
                 $nOptions[is_string($k) ? constant($k) : $k] = $v;
             }
@@ -183,7 +183,7 @@ class Connector
         }
 
         if (!$this->useWrapper) {
-            $this->attributes[\PDO::ATTR_STATEMENT_CLASS] = [__NAMESPACE__.'\Statement', [$this]];
+            $this->attributes[\PDO::ATTR_STATEMENT_CLASS] = array(__NAMESPACE__.'\Statement', array($this));
         }
 
         $pdo = new \PDO($this->dsn, $this->username, $this->password, $this->driverOptions);
@@ -206,14 +206,6 @@ class Connector
         return $this->pdo == true;
     }
     
-    public function ensurePDO()
-    {
-        if ($this->pdo == null) {
-            throw new \PDOException("Not connected");
-        }
-        return $this;
-    }
-
     public function connect()
     {
         $this->getPDO();
@@ -252,7 +244,7 @@ class Connector
         }
         $result = $pdo->setAttribute($attribute, $value);
         if ($result !== true) {
-            $name = &$this->attributeIndex[$attribute] ?: "(unknown:$attribute)";
+            $name = isset(self::$attributeIndex[$attribute]) ? self::$attributeIndex[$attribute] : "(unknown:$attribute)";
             throw new \PDOException("Attribute $name, value $value invalid for engine {$this->engine}");
         }
     }
@@ -356,8 +348,9 @@ class Connector
         return $this->exec($sql, $params);
     }
 
-    public function execAll($statements, $transaction=false)
+    public function execAll($statements, $transaction=null)
     {
+        $transaction = $transaction === null ? true : $transaction == true;
         if (!$statements) {
             throw new \InvalidArgumentException();
         }
@@ -365,7 +358,7 @@ class Connector
             $this->connect();
         }
 
-        $out = [];
+        $out = array();
         if ($transaction) {
             $this->beginTransaction();
         }
@@ -378,10 +371,17 @@ class Connector
         }
         return $out;
     }
+
+    public function executeAll($statements, $transaction=null)
+    {
+        return $this->execAll($statements, $transaction);
+    }
     
     public function lastInsertId()
     {
-        $this->ensurePDO();
+        if (!$this->isConnected()) {
+            throw new \PDOException("PDOK: Not connected");
+        }
         return $this->pdo->lastInsertId();
     }
     
@@ -424,12 +424,24 @@ class Connector
 
 	public function quoteIdentifier($name)
 	{
-        switch ($this->engine) {
-        case 'mysql': case 'sqlite': $quote = '`'; break;
-        case 'pgsql': $quote = '"'; break;
-        default: throw new \PDOException("Unsupported engine {$this->engine}");
+        $name = filter_var($name, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
+        if (!$name) {
+            throw new \InvalidArgumentException("No valid characters in identifier");
         }
-		return $quote.str_replace($quote, '', $name).$quote;
+
+        switch ($this->engine) {
+        case 'mysql': case 'sqlite':
+            return '`'.str_replace('`', '', $name).'`';
+
+        case 'pgsql': case 'oci':
+            return '"'.str_replace('"', '', $name).'"';
+
+        case 'mssql':
+            return '['.strtr($name, array('['=>'', ']'=>'')).']';
+
+        default:
+            throw new \PDOException("Unsupported engine {$this->engine}");
+        }
 	}
 
     public function inTransaction()
