@@ -6,7 +6,6 @@ class StatementWrapperProxyTest extends \CustomTestCase
     function setUp()
     {
         $this->statement = $this->getMockBuilder('PDOStatement')
-            ->disableOriginalConstructor()
             ->setMethods(array())
             ->getMock();
 
