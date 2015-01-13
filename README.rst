@@ -1,6 +1,18 @@
 PDOK: Improved PDO Interface
 ============================
 
+Ever found yourself thinking PDO would be a lot nicer if it was just nudged that little
+bit?
+
+If so, PDOK may be for you. PDOK provides classes that should be almost completely
+compatible with PDO and PDOStatement, but with some enhancements like a fluent interface,
+connect/disconnect and consistent method names.
+
+If you already use ``PDO::ERRMODE_EXCEPTION``, this should work as a drop-in replacement.
+Please familiarise yourself with the "Caveats" and "Limitations" sections if you are
+migrating an existing project.
+
+
 Improvements
 ------------
 
@@ -113,7 +125,8 @@ Query count:
     <?php
     $pdo->execute('UPDATE mytable1 SET foo=1');
     $pdo->execute('UPDATE mytable2 SET bar=1');
-    assert($pdo->queries == 2);
+    $pdo->prepare("UPDATE mytable3 SET baz=1")->execute();
+    assert($pdo->queries == 3);
 
 
 Limitations
