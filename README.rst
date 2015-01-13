@@ -1,7 +1,7 @@
 PDOK: Improved PDO Interface
 ============================
 
-Ever found yourself thinking PDO would be a lot nicer if it was just nudged that little
+Ever found yourself thinking PDO would be a lot nicer if the API was tweaked just a little
 bit?
 
 If so, PDOK may be for you. PDOK provides classes that should be almost completely
