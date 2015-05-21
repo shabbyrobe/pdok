@@ -329,11 +329,12 @@ class Connector
         if (!$this->pdo) {
             $this->connect();
         }
-        ++$this->queries;
         if (!$params) {
+            ++$this->queries;
             return $this->pdo->exec($sql);
         }
         else {
+            // queries are incremented by the Statement object
             $stmt = $this->prepare($sql);
             $stmt->execute($params);
             return $stmt->rowCount();
