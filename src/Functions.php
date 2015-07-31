@@ -16,7 +16,7 @@ final class Functions
 
     public static function ensureStatement($stmt)
     {
-        if (!$stmt instanceof \PDOStatement && !$stmt instanceof \PDOK\StatementWrapper) {
+        if (!$stmt instanceof \PDOStatement && !$stmt instanceof \PDOK\StatementInterface) {
             $type = ($type = gettype($stmt)) == 'object' ? get_class($stmt) : $type;
             throw new \InvalidArgumentException("Must be an instance of PDOStatement or PDOK\StatementWrapper, found ".$type);
         }

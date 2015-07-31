@@ -273,6 +273,27 @@ class ConnectorTest extends \CustomTestCase
     }
 
     /**
+     * @covers PDOK\Connector::quoteIdentifier
+     */
+    public function testQuoteIdentifierInvalid()
+    {
+        $conn = new \PDOK\Connector('sqlite::memory:');
+        $this->setExpectedException("InvalidArgumentException");
+        $result = $conn->quoteIdentifier("\n");
+    }
+
+    /**
+     * @covers PDOK\Connector::quoteIdentifier
+     */
+    public function testQuoteIdentifierInvalidEngine()
+    {
+        $conn = new \PDOK\Connector('sqlite::memory:');
+        $conn->engine = 'WhoseSql?';
+        $this->setExpectedException("PDOException");
+        $result = $conn->quoteIdentifier("yep");
+    }
+
+    /**
      * @covers PDOK\Connector::inTransaction
      */
     public function testInTransactionReturnsFalseWhenDisconnected()

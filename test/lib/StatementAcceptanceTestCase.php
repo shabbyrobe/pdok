@@ -36,6 +36,31 @@ abstract class StatementAcceptanceTestCase extends \CustomTestCase
         $this->assertEquals(2, $stmt->fetchColumn(0));
     }
 
+    function testFetchAssoc()
+    {
+        $stmt = $this->connector->prepare("SELECT * FROM food LIMIT 1");
+        $expected = $stmt->execute()->fetch(\PDO::FETCH_ASSOC);
+        $this->assertEquals('junk', $expected['type']);
+        $this->assertEquals($expected, $stmt->execute()->fetchAssoc());
+    }
+
+    function testFetchNum()
+    {
+        $stmt = $this->connector->prepare("SELECT * FROM food LIMIT 1");
+        $expected = $stmt->execute()->fetch(\PDO::FETCH_NUM);
+        $this->assertEquals('junk', $expected[1]);
+        $this->assertEquals($expected, $stmt->execute()->fetchNum());
+    }
+
+    function testGetQueryString()
+    {
+        $sql = "SELECT * FROM food LIMIT 1";
+        $stmt = $this->connector->prepare($sql);
+        $this->assertTrue(isset($stmt->queryString));
+        $this->assertEquals($sql, $stmt->queryString);
+        $this->assertEquals($stmt->queryString, $stmt->getQueryString());
+    }
+
     function testExecuteSelectPositionalParams()
     {
         $stmt = $this->connector->prepare("SELECT COUNT(*) FROM food WHERE type=? AND id<=?");

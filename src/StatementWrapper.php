@@ -1,8 +1,10 @@
 <?php
 namespace PDOK;
 
-class StatementWrapper
+class StatementWrapper implements StatementInterface
 {
+    use StatementTrait;
+
 	public $statement;
     private $connector;
 
@@ -11,21 +13,6 @@ class StatementWrapper
         $this->connector = $connector;
 		$this->statement = $statement;
 	}
-
-    function __get($name)
-    {
-        if ($name == 'queryString') {
-            return $this->statement->queryString;
-        } else {
-            throw new \BadMethodCallException();
-        }
-    }
-
-    function __isset($name)
-    {
-        $this->__get($name);
-        return true;
-    }
 
 	function bindColumn($column, &$param, $type=\PDO::PARAM_STR, $maxlen=null, $driverOptions=null) 
 	{
@@ -73,17 +60,12 @@ class StatementWrapper
         return ($ret = $this->statement->execute($inputParameters)) ? $this : $ret;
 	}
 
-	function exec($inputParameters=null) 
-	{
-        return $this->execute($inputParameters);
-	}
-
 	function fetch($fetchStyle=null, $cursorOrientation=\PDO::FETCH_ORI_NEXT, $cursorOffset=0) 
 	{
         return $this->statement->fetch($fetchStyle, $cursorOrientation, $cursorOffset);
 	}
 
-	function fetchAll($fetchStyle=null, $fetchArgument=null, array $ctorArgs=array()) 
+	function fetchAll($fetchStyle=null, $fetchArgument=null, $ctorArgs=array()) 
 	{
         // PDOStatement is sensitive to the number of arguments passed. If you try to do
         // a straight proxy, you get "General error: Extraneous additional parameters"
@@ -95,7 +77,7 @@ class StatementWrapper
         return $this->statement->fetchColumn($columnNumber);
 	}
 
-	function fetchObject($className="stdClass", array $ctorArgs) 
+	function fetchObject($className="stdClass", $ctorArgs) 
 	{
         return $this->statement->fetchObject($className, $ctorArgs);
 	}
@@ -109,6 +91,11 @@ class StatementWrapper
 	{
         return $this->statement->getColumnMeta($column);
 	}
+
+    function getQueryString()
+    {
+        return $this->statement->queryString;
+    }
 
 	function nextRowset() 
 	{

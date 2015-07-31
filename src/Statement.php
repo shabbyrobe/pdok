@@ -1,14 +1,18 @@
 <?php
 namespace PDOK;
 
-class Statement extends \PDOStatement
+class Statement extends \PDOStatement implements StatementInterface
 {
+    use StatementTrait;
+
     private $connector;
 
     protected function __construct($connector)
     {
         $this->connector = $connector;
     }
+
+    function getQueryString() { return $this->queryString; }
 
 	function bindColumn($column, &$param, $type=\PDO::PARAM_STR, $maxlen=null, $driverOptions=null) 
 	{

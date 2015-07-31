@@ -57,7 +57,7 @@ Connect on demand:
     <?php
     $pdo = new \PDOK\Connector('...')
     assert($pdo->isConnected() == false);
-
+   
     $pdo->query("SELECT * FROM mytable");
     assert($pdo->isConnected() == true);
 
@@ -79,11 +79,11 @@ Disconnect, reconnect, clone and serialize:
     <?php
     $pdo->disconnect();
     assert($pdo->isConnected() == false);
-
+   
     $pdo->connect();
     $cloned = clone $pdo;
     assert($pdo->isConnected() == true && $cloned->isConnected() == false);
-
+   
     $unserialized = unserialize(serialize($pdo));
     assert($unserialized->isConnected() == false);
 
@@ -93,15 +93,15 @@ Array-based static constructor:
 .. code-block:: php
     
     <?php
-    $ini = '
+    $ini = <<<INI
     dsn = "mysql:host=localhost"
     user = "myuser"
     pass = "mypass"
     db = "hello"
     options[PDO::MYSQL_ATTR_USE_BUFFERED_QUERY] = true
     statements[] = "SET NAMES \"utf8\""
-    ';
-
+    INI;
+   
     $settings = parse_ini_string($ini);
     $pdo = \PDOK\Connector::create($settings);
 
@@ -113,7 +113,7 @@ Method naming consistency (choose your poison, but stick to it):
     <?php
     $pdo->exec('SELECT * FROM mytable');
     $pdo->execute('SELECT * FROM mytable');
-
+   
     $stmt->exec();
     $stmt->execute();
 
@@ -129,11 +129,61 @@ Query count:
     assert($pdo->queries == 3);
 
 
+Shorthand fetch methods:
+
+.. code-block:: php
+
+    <?php
+    $stmt = $connector->query("SELECT * FROM mytable");
+    
+    // equivalent
+    $stmt->fetchAssoc();
+    $stmt->fetch(\PDO::FETCH_ASSOC);
+   
+    // equivalent
+    $stmt->fetchNum();
+    $stmt->fetch(\PDO::FETCH_NUM);
+
+
+Every ``fetch`` method has a corresponding ``each`` method:
+
+.. code-block:: php
+
+    <?php
+    foreach ($stmt->eachAssoc() as $row) {
+        // stuff
+    }
+    foreach ($stmt->eachNum() as $row) {
+        // stuff
+    }
+    foreach ($stmt->each(\PDO::FETCH_ASSOC) as $row) {
+        // stuff
+    }
+
+
+Interfaces! If you want to make your own statement class, implement
+``PDOK\StatementInterface`` and use ``PDOK\StatementTrait``:
+
+.. code-block:: php
+ 
+    <?php
+    class MyStatement implements \PDOK\StatementInterface
+    {
+        use \PDOK\StatementTrait;
+   
+        /* ... */
+    }
+
+
 Limitations
 -----------
 
 - You can only use ``PDO::ERRMODE_EXCEPTION`` for ``PDO::ATTR_ERRMODE``.
-- Type hints of ``PDO`` and ``PDOStatement`` are no longer useful.
+
+- Many methods return boolean on failure instead of being fluent. This is a decision that
+  hasn't been made yet - I'm leaning towards them raising exceptions instead of returning
+  false as error messages like "Tried to call function execute() on a non object" is not
+  exactly developer friendly.
 
 
 Caveats
@@ -141,9 +191,6 @@ Caveats
 
 - PDOK should be backward compatible with vanilla PDO provided you do not use type hints.
   You can replace your existing PDO type hints with a call to
-  ``PDOK\Functions::ensurePDO($pdo)``.
-
-- ``PDOK\Connector->prepare()`` and ``PDOK\Connector->query()`` may return an instance of
-  ``PDOK\Statement`` or ``PDOK\StatementWrapper``. These do not share a common subtype -
-  this can be worked around by ``PDOK\Functions::ensureStatement($stmt)``.
+  ``PDOK\Functions::ensurePDO($pdo)``, and your existing ``PDOStatement`` hints with 
+  ``PDOK\Functions::ensureStatement($stmt)``.
 
