@@ -423,8 +423,8 @@ class Connector
         return $this->pdo->quote($string, $parameterType);
     }
 
-	public function quoteIdentifier($name)
-	{
+    public function quoteIdentifier($name)
+    {
         $name = filter_var($name, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
         if (!$name) {
             throw new \InvalidArgumentException("No valid characters in identifier");
@@ -443,7 +443,7 @@ class Connector
         default:
             throw new \PDOException("Unsupported engine {$this->engine}");
         }
-	}
+    }
 
     public function inTransaction()
     {
