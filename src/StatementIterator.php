@@ -30,6 +30,9 @@ class StatementIterator implements \Iterator
 
     private function fetch()
     {
-        $this->current = call_user_func_array([$this->statement, $this->method], $this->args);
+        $this->current = call_user_func_array(
+            [$this->statement, $this->method],
+            $this->args
+        );
     }
 }

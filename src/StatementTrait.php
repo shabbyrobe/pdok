@@ -53,8 +53,12 @@ trait StatementTrait
         return new StatementIterator($this, 'fetchColumn', [$columnNumber]);
     }
 
-    function eachObject($className="stdClass", array $ctorArgs=[])
+    function eachObject($className="stdClass", array $ctorArgs=null)
     {
-        return new StatementIterator($this, 'fetchObject', [$className, $ctorArgs]);
+        $args = [$className];
+        if ($ctorArgs !== null) {
+            $args[] = $ctorArgs;
+        }
+        return new StatementIterator($this, 'fetchObject', $args);
     }
 }

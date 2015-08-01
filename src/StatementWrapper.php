@@ -77,7 +77,7 @@ class StatementWrapper implements StatementInterface
         return $this->statement->fetchColumn($columnNumber);
     }
 
-    function fetchObject($className="stdClass", $ctorArgs) 
+    function fetchObject($className="stdClass", $ctorArgs=null) 
     {
         return $this->statement->fetchObject($className, $ctorArgs);
     }

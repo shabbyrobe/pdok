@@ -32,11 +32,11 @@ interface StatementInterface
 
     function fetch($fetchStyle=null, $cursorOrientation=\PDO::FETCH_ORI_NEXT, $cursorOffset=0);
 
-    function fetchAll($fetchStyle=null, $fetchArgument=null, $ctorArgs=array());
+    function fetchAll($fetchStyle=null, $fetchArgument=null, $ctorArgs=null);
 
     function fetchColumn($columnNumber=0);
 
-    function fetchObject($className="stdClass", $ctorArgs);
+    function fetchObject($className="stdClass", $ctorArgs=null);
 
     function getAttribute($attribute);
 
@@ -65,7 +65,7 @@ interface StatementInterface
 
     function eachColumn($columnNumber=0);
 
-    function eachObject($className="stdClass", array $ctorArgs=[]);
+    function eachObject($className="stdClass", array $ctorArgs=null);
 
     function exec($inputParameters=null);
 
