@@ -5,12 +5,22 @@ Ever found yourself thinking PDO would be a lot nicer if the API was tweaked jus
 bit?
 
 If so, PDOK may be for you. PDOK provides classes that should be almost completely
-compatible with PDO and PDOStatement, but with some enhancements like a fluent interface,
-connect/disconnect and consistent method names.
+compatible with PDO and PDOStatement, but with some enhancements:
+
+- Fluent interface
+- Connect on demand, not on instantiation
+- Disconnect and reconnect
+- Serialize, unserialize, clone support
+- Consistent method names (``PDO->execute()``, ``PDOStatement->exec()``)
+- Shorthand fetch methods: ``fetchAssoc``, ``fetchNum``
+- Iteration support - every ``fetch`` method has a corresponding ``each`` method which
+  returns an iterator.
 
 If you already use ``PDO::ERRMODE_EXCEPTION``, this should work as a drop-in replacement.
-Please familiarise yourself with the "Caveats" and "Limitations" sections if you are
-migrating an existing project.
+Please familiarise yourself with the :ref:`caveats` and :ref:`limitations` sections if you
+are migrating an existing project.
+
+Requires PHP 5.4 or greater, works with HHVM.
 
 
 Improvements
@@ -175,6 +185,8 @@ Interfaces! If you want to make your own statement class, implement
     }
 
 
+.. _limitations:
+
 Limitations
 -----------
 
@@ -186,6 +198,8 @@ Limitations
   exactly developer friendly.
 
 
+.. _caveats:
+
 Caveats
 -------
 
@@ -193,4 +207,8 @@ Caveats
   You can replace your existing PDO type hints with a call to
   ``PDOK\Functions::ensurePDO($pdo)``, and your existing ``PDOStatement`` hints with 
   ``PDOK\Functions::ensureStatement($stmt)``.
+
+- PDOK does not connect on demand. If your code requires that a connection be established
+  on instantiation, you will need to modify it to call ``PDOK\Connector->connect()``
+  directly afterwards.
 
