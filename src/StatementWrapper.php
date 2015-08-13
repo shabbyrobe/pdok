@@ -14,6 +14,12 @@ class StatementWrapper implements StatementInterface
         $this->statement = $statement;
     }
 
+    function __destruct()
+    {
+        $this->connector = null;
+        $this->statement = null;
+    }
+
     function bindColumn($column, &$param, $type=\PDO::PARAM_STR, $maxlen=null, $driverOptions=null) 
     {
         return ($ret = $this->statement->bindColumn($column, $param, $type, $maxlen, $driverOptions)) ? $this : $ret;

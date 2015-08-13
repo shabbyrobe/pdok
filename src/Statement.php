@@ -12,6 +12,11 @@ class Statement extends \PDOStatement implements StatementInterface
         $this->connector = $connector;
     }
 
+    function __destruct()
+    {
+        $this->connector = null;
+    }
+
     function getQueryString() { return $this->queryString; }
 
     function bindColumn($column, &$param, $type=\PDO::PARAM_STR, $maxlen=null, $driverOptions=null) 

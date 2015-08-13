@@ -15,6 +15,9 @@
     "autoload": {
         "psr-4": { "PDOK\\": "src/" }
     },
+    "autoload-dev": {
+        "psr-4": { "PDOK\\Test\\": "test/lib" }
+    },
     "require": {
         "php": ">=5.4"
     },

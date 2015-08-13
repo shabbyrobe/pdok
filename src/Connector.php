@@ -94,10 +94,15 @@ class Connector
         $this->driverOptions = $driverOptions ?: array();
         $this->connectionStatements = $connectionStatements ?: array();
     }
-    
+
     public function __destruct()
     {
         $this->pdo = null;
+        
+        // can hold a reference to PDOK\Connector
+        if (isset($this->attributes[\PDO::ATTR_STATEMENT_CLASS])) {
+            $this->attributes[\PDO::ATTR_STATEMENT_CLASS] = null;
+        }
     }
 
     /**
