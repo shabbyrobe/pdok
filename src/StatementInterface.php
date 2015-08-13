@@ -4,6 +4,8 @@ namespace PDOK;
 /**
  * If you implement this, you will probably want to include
  * ``use PDOK\StatementTrait``
+ *
+ * You also probably want to implement Iterator or IteratorAggregate
  */
 interface StatementInterface
 {

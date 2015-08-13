@@ -13,7 +13,6 @@ class Statement extends \PDOStatement implements StatementInterface
 
     protected function __construct($connector)
     {
-        throw new \Exception("Should not be used due to PHP connection leak bug.");
         $this->connector = $connector;
     }
 

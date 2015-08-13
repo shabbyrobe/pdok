@@ -64,9 +64,9 @@ class Connector
     
     private $attributes=array();
 
-    // See PDOK\Statement's docblock for an explanation
+    // See PDOK\Statement's docblock for an explanation.
     // private $useWrapper = false;
-    private $useWrapper = true;
+    public $useWrapper = true;
 
     private static $attributeIndex = array(
         \PDO::ATTR_CASE => 'PDO::ATTR_CASE',
@@ -179,17 +179,12 @@ class Connector
     
     public function createPDO()
     {
-        /*
         if (isset($this->driverOptions[\PDO::ATTR_PERSISTENT]) && $this->driverOptions[\PDO::ATTR_PERSISTENT]) {
             $this->useWrapper = true;
         }
         elseif (isset($this->attributes[\PDO::ATTR_STATEMENT_CLASS])) {
             $this->useWrapper = true;
         }
-        **/
-
-        // see PDOK\Statement's docblock for info
-        $this->useWrapper = true;
 
         if (isset($this->attributes[\PDO::ATTR_ERRMODE]) && $this->attributes[\PDO::ATTR_ERRMODE] != \PDO::ERRMODE_EXCEPTION) {
             throw new \PDOException("Sorry, PDOK only supports ERRMODE_EXCEPTION"); 

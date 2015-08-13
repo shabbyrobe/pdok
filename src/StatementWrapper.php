@@ -1,7 +1,7 @@
 <?php
 namespace PDOK;
 
-class StatementWrapper implements StatementInterface
+class StatementWrapper implements StatementInterface, \IteratorAggregate
 {
     use StatementTrait;
 
@@ -18,6 +18,11 @@ class StatementWrapper implements StatementInterface
     {
         $this->connector = null;
         $this->statement = null;
+    }
+
+    function getIterator()
+    {
+        return $this->statement;
     }
 
     function bindColumn($column, &$param, $type=\PDO::PARAM_STR, $maxlen=null, $driverOptions=null) 

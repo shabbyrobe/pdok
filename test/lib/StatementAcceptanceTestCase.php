@@ -121,4 +121,11 @@ abstract class StatementAcceptanceTestCase extends \CustomTestCase
         $row = $stmt->fetch();
         $this->assertEquals(array('id', 'type', 'name'), array_keys($row));
     }
+
+    function testStatementIterable()
+    {
+        foreach ($this->connector->query("SELECT * FROM food") as $row) {
+            $this->assertInternalType('array', $row);
+        }
+    }
 }

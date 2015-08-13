@@ -21,10 +21,6 @@ class DestructTest extends \CustomTestCase
     {
         $f = function() {
             $pdok = new DestructConnector('sqlite::memory:');
-            $rc = new \ReflectionClass('PDOK\Connector');
-            $a = $rc->getProperty('useWrapper');
-            $a->setAccessible(true);
-            $a->setValue($pdok, true);
             $pdok->connect();
         };
         $f();
