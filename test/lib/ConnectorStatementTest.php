@@ -15,10 +15,10 @@ class ConnectorStatementTest extends \CustomTestCase
         $connector->exec("CREATE TABLE foo(id INTEGER);");
 
         $stmt = $connector->prepare('SELECT * FROM foo');
-        $this->assertInstanceOf('PDOK\Statement', $stmt);
+        $this->assertInstanceOf('PDOK\StatementInterface', $stmt);
 
         $stmt = $connector->query('SELECT * FROM foo');
-        $this->assertInstanceOf('PDOK\Statement', $stmt);
+        $this->assertInstanceOf('PDOK\StatementInterface', $stmt);
     }
 
     /**

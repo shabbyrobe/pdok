@@ -16,7 +16,7 @@ class StatementIteratorTest extends StatementAcceptanceTestCase
 
     function assertStatement($statement)
     {
-        $this->assertInstanceOf('PDOK\Statement', $statement);
+        $this->assertInstanceOf('PDOK\StatementInterface', $statement);
     }
 
     function testEach()

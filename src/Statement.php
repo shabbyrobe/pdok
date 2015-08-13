@@ -1,6 +1,10 @@
 <?php
 namespace PDOK;
 
+/**
+ * Warning: https://bugs.php.net/bug.php?id=66350&edit=1
+ * This should not be used.
+ */
 class Statement extends \PDOStatement implements StatementInterface
 {
     use StatementTrait;
@@ -9,6 +13,7 @@ class Statement extends \PDOStatement implements StatementInterface
 
     protected function __construct($connector)
     {
+        throw new \Exception("Should not be used due to PHP connection leak bug.");
         $this->connector = $connector;
     }
 

@@ -85,7 +85,8 @@ class StatementWrapper implements StatementInterface
 
     function fetchObject($className="stdClass", $ctorArgs=null) 
     {
-        return $this->statement->fetchObject($className, $ctorArgs);
+        // fetchObject is sensitive to the number of parameters it receives
+        return call_user_func_array(array($this->statement, 'fetchObject'), func_get_args());
     }
 
     function getAttribute($attribute) 

@@ -6,6 +6,7 @@ require_once __DIR__.'/StatementAcceptanceTestCase.php';
 /**
  * @group statement
  * @group acceptance
+ * @group faulty
  */
 class StatementAcceptanceTest extends StatementAcceptanceTestCase
 {
