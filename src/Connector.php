@@ -115,7 +115,9 @@ class Connector
         $this->pdo = null;
         $this->queries = 0;
         $keys = array_keys(get_object_vars($this));
-        $keys[] = 'attributes';
+        if (!in_array('attributes', $keys)) {
+            $keys[] = 'attributes';
+        }
         return $keys;
     }
 
