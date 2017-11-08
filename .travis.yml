@@ -15,6 +15,7 @@ branches:
     - develop
 
 install:
+  - rm composer.lock
   - composer install
 
 script:
