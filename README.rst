@@ -1,3 +1,11 @@
+*⚠️ NOTE: This has not been maintained in a _very_ long time. It should thus be considered "_very deprecated_".
+Please do not use it, and update any usage you have of it to use something else.**
+
+*⚠️ ALSO NOTE: This repo will relocate at some point in 2024.*
+
+---
+
+
 PDOK: Improved PDO Interface
 ============================
 
